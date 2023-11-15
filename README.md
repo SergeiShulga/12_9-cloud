@@ -27,30 +27,58 @@ psql "host=rc1a-jlmupvxu2nxzx70j.mdb.yandexcloud.net,rc1b-bldu8ngmaxzci0hp.mdb.y
     user=user1 \
     target_session_attrs=read-write"
 '''
-![alt text](https://github.com/SergeiShulga/12-5/blob/main/img/001.png)
-
 Используйте инструкцию по подключению к кластеру, доступную на вкладке «Обзор»: cкачайте SSL-сертификат и подключитесь к кластеру с помощью утилиты psql, указав hostname всех узлов и атрибут target_session_attrs=read-write.
+
+![alt text](https://github.com/SergeiShulga/12_9-cloud/blob/main/img/001.png)
 
 Проверьте, что подключение прошло к master-узлу.
 
 select case when pg_is_in_recovery() then 'REPLICA' else 'MASTER' end;
+
+![alt text](https://github.com/SergeiShulga/12_9-cloud/blob/main/img/003.png)
+
 Посмотрите количество подключенных реплик:
+
 select count(*) from pg_stat_replication;
+
+![alt text](https://github.com/SergeiShulga/12_9-cloud/blob/main/img/004.png)
+
 Проверьте работоспособность репликации в кластере
+
 Создайте таблицу и вставьте одну-две строки.
+
 CREATE TABLE test_table(text varchar);
+
 insert into test_table values('Строка 1');
+
+![alt text](https://github.com/SergeiShulga/12_9-cloud/blob/main/img/005.png)
+
 Выйдите из psql командой \q.
 
 Теперь подключитесь к узлу-реплике. Для этого из команды подключения удалите атрибут target_session_attrs и в параметре атрибут host передайте только имя хоста-реплики. Роли хостов можно посмотреть на соответствующей вкладке UI консоли.
 
+'''
+psql "host=rc1b-bldu8ngmaxzci0hp.mdb.yandexcloud.net \
+    port=6432 \
+    sslmode=verify-full \
+    dbname=db1 \
+    user=user1"
+'''
+
 Проверьте, что подключение прошло к узлу-реплике.
 
 select case when pg_is_in_recovery() then 'REPLICA' else 'MASTER' end;
+
 Проверьте состояние репликации
+
 select status from pg_stat_wal_receiver;
+
 Для проверки, что механизм репликации данных работает между зонами доступности облака, выполните запрос к таблице, созданной на предыдущем шаге:
+
 select * from test_table;
+
+![alt text](https://github.com/SergeiShulga/12_9-cloud/blob/main/img/007.png)
+
 В качестве результата вашей работы пришлите скриншоты:
 
 1) Созданной базы данных; 2) Результата вывода команды на реплике select * from test_table;.
